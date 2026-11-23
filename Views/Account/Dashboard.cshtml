@@ -1,0 +1,85 @@
+@using InstructorInformationSystem.Models
+@{
+    ViewData["Title"] = "Dashboard";
+    var recent = ViewBag.RecentInstructors as List<Instructor> ?? new List<Instructor>();
+    var designations = ViewBag.Designations as List<KeyValuePair<string, int>> ?? new List<KeyValuePair<string, int>>();
+    var maxCount = designations.Any() ? designations.Max(item => item.Value) : 1;
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+
+<div class="page-heading dash-head">
+    <div>
+        <h1>@greeting, @User.Identity?.Name</h1>
+        <p class="muted-text">Here is what is happening with your instructor records.</p>
+    </div>
+</div>
+
+<section class="dash-stats" aria-label="Summary">
+    <article class="dash-card accent">
+        <h2 class="dash-card-label">Instructor records</h2>
+        <p class="dash-card-number">@ViewBag.InstructorCount</p>
+        <a asp-controller="Instructor" asp-action="Index" class="dash-card-link">View all records &rarr;</a>
+    </article>
+    <article class="dash-card">
+        <h2 class="dash-card-label">Designations</h2>
+        <p class="dash-card-number">@ViewBag.DesignationCount</p>
+        <p class="dash-card-note">Distinct roles on record</p>
+    </article>
+    <article class="dash-card">
+        <h2 class="dash-card-label">Signed in as</h2>
+        <p class="dash-card-email">@ViewBag.AccountEmail</p>
+        <p class="dash-card-note">Account access is active</p>
+    </article>
+</section>
+
+<section class="dash-grid">
+    <article class="glass-panel">
+        <div class="glass-panel-head">
+            <h2>Instructors by designation</h2>
+        </div>
+        @if (!designations.Any())
+        {
+            <p class="muted-text">Add instructors to see how roles are spread out.</p>
+        }
+        else
+        {
+            <ul class="bar-list">
+                @foreach (var item in designations)
+                {
+                    var percent = (int)Math.Round(item.Value * 100.0 / maxCount);
+                    <li>
+                        <div class="bar-label"><span>@item.Key</span><strong>@item.Value</strong></div>
+                        <div class="bar-track"><div class="bar-fill" style="width:@(percent)%"></div></div>
+                    </li>
+                }
+            </ul>
+        }
+    </article>
+
+    <article class="glass-panel">
+        <div class="glass-panel-head">
+            <h2>Recent instructors</h2>
+            <a asp-controller="Instructor" asp-action="Index">View all</a>
+        </div>
+        @if (!recent.Any())
+        {
+            <p class="muted-text">No records yet. Use Add instructor in the sidebar to create the first one.</p>
+        }
+        else
+        {
+            <ul class="dash-recent-list">
+                @foreach (var item in recent)
+                {
+                    <li>
+                        <a asp-controller="Instructor" asp-action="Details" asp-route-id="@item.InstructorId">
+                            <span class="avatar-circle avatar-sm">@item.FullName.Trim().Substring(0, 1).ToUpperInvariant()</span>
+                            <span class="dash-recent-name"><strong>@item.FullName</strong><small>@item.Designation</small></span>
+                            <span class="dash-recent-id">#@item.InstructorId</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </article>
+</section>
